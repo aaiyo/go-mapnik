@@ -175,6 +175,23 @@ func (m *Map) Load(stylesheet string) error {
 	return nil
 }
 
+// Load a Mapnik map XML from string.
+//
+// Note: Since Mapnik 3 all layers with status="off" are not loaded and cannot
+// be activated by a custom LayerSelector. As a workaround, all layers with names
+// starting with '__OFF__' are disabled on load and the '__OFF__' prefix is removed
+// from the layer name.
+func (m *Map) LoadFromString(stylesheet string) error {
+	cs := C.CString(stylesheet)
+	defer C.free(unsafe.Pointer(cs))
+	if C.mapnik_map_load_from_string(m.m, cs) != 0 {
+		return m.lastError()
+	}
+
+	C.mapnik_apply_layer_off_hack(m.m)
+	return nil
+}
+
 // Resize changes the map size in pixel.
 // Sizes larger than 16k pixels are ignored by Mapnik. Use NewSized
 // to initialize larger maps.

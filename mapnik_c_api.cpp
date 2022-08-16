@@ -152,6 +152,20 @@ int mapnik_map_load(mapnik_map_t * m, const char* stylesheet) {
     return -1;
 }
 
+int mapnik_map_load_from_string(mapnik_map_t * m, const char* stylesheet) {
+    mapnik_map_reset_last_error(m);
+    if (m && m->m) {
+        try {
+            mapnik::load_map_string(*m->m, stylesheet);
+        } catch (std::exception const& ex) {
+            m->err = new std::string(ex.what());
+            return -1;
+        }
+        return 0;
+    }
+    return -1;
+}
+
 void mapnik_apply_layer_off_hack(mapnik_map_t * m) {
     // Note: Since Mapnik 3 all layers with status="off" are not loaded and cannot
     // be activated by a custom LayerSelector. As a workaround, all layers with names
