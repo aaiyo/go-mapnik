@@ -69,29 +69,53 @@ func RegisterDatasources(path string) error {
 }
 
 // RegisterDatasources registers all fonts found in the given path.
-func RegisterFonts(path string) error {
-	fileInfos, err := ioutil.ReadDir(path)
-	if err != nil {
-		return err
-	}
-
-	for _, file := range fileInfos {
-		fullPath := filepath.Join(path, file.Name())
+func RegisterFonts(dirpath string) error {
+  
+  return filepath.Walk(dirpath, func(path string, info os.FileInfo, err error) error {
+    if err != nil {
+      return err
+    }
+    fullPath := path
 		if !isFontFile(fullPath) {
-			continue
-		}
-		cs := C.CString(fullPath)
-		defer C.free(unsafe.Pointer(cs))
-		// Register fonts one-by-one. See comment in RegisterDatasources.
-		if C.mapnik_register_font(cs) == 0 {
-			e := C.GoString(C.mapnik_register_last_error())
-			if e != "" {
-				return errors.New("registering fonts: " + e)
-			}
-			return errors.New("error while registering fonts")
-		}
-	}
-	return nil
+			
+		} else {
+      cs := C.CString(fullPath)
+      defer C.free(unsafe.Pointer(cs))
+      // Register fonts one-by-one. See comment in RegisterDatasources.
+      if C.mapnik_register_font(cs) == 0 {
+        e := C.GoString(C.mapnik_register_last_error())
+        if e != "" {
+          return errors.New("registering fonts: " + e)
+        }
+        return errors.New("error while registering fonts")
+      }
+    }
+    return nil
+  })
+  
+	//~ fileInfos, err := ioutil.ReadDir(dirpath)
+	//~ if err != nil {
+		//~ return err
+	//~ }
+
+	//~ for _, file := range fileInfos {
+		//~ fullPath := filepath.Join(dirpath, file.Name())
+		//~ if !isFontFile(fullPath) {
+			//~ continue
+		//~ }
+		//~ cs := C.CString(fullPath)
+		//~ defer C.free(unsafe.Pointer(cs))
+		//~ // Register fonts one-by-one. See comment in RegisterDatasources.
+		//~ if C.mapnik_register_font(cs) == 0 {
+			//~ e := C.GoString(C.mapnik_register_last_error())
+			//~ if e != "" {
+				//~ return errors.New("registering fonts: " + e)
+			//~ }
+			//~ return errors.New("error while registering fonts")
+		//~ }
+	//~ }
+	//~ return nil
+  
 }
 
 func isFontFile(path string) bool {
